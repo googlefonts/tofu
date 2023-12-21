@@ -1,9 +1,9 @@
 # Google Fonts' Tofu Font
 
-Creates a compact font that renders all the things as *tofu*, inspired by [github.com/adobe-fonts/adobe-notdef](https://github.com/adobe-fonts/adobe-notdef) which explains the whole thing better.
+Creates a compact font that renders all codepoints as *tofu*, inspired by [github.com/adobe-fonts/adobe-notdef](https://github.com/adobe-fonts/adobe-notdef), which offers a more detailed explanation.
 
 ```bash
-$ python3 tofu.py
+$ build.sh --version_major=1 --version_minor=0
 $ ttx -l tofu.ttf
 Listing table info for "tofu.ttf":
     tag     checksum    length    offset
