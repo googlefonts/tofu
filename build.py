@@ -20,6 +20,9 @@ import tempfile
 FLAGS = flags.FLAGS
 
 
+flags.DEFINE_boolean(
+    "support_composite", False, "Whether to support composite tofu glyph (if False, will use the first glyph with paint)."
+)
 flags.DEFINE_string(
     "tofu_source_svg", "tofu.svg", "Filename of the SVG in tofu source dir to use in the Tofu font."
 )
@@ -95,15 +98,32 @@ def _build_ttf() -> pathlib.Path:
         ttf_file_path = _compile_font()
         with TTFont(ttf_file_path) as font:
             fb = FontBuilder(font=font)
-            glyph_order = [n for n in font.getGlyphNames() if n != 'space']
-            glyphs = {n: fb.font['glyf'][n] for n in glyph_order}
-            horizontal_metrics = {n: fb.font['hmtx'][n] for n in glyph_order}
-            glyphs['.notdef'] = TTGlyphPen(None).glyph()
-            glyphs[GLYPH_NAME] = glyphs[glyph_order[-1]]
-            del glyphs[glyph_order[-1]]
-            horizontal_metrics[GLYPH_NAME] = horizontal_metrics[glyph_order[-1]]
-            del horizontal_metrics[glyph_order[-1]]
-            glyph_order[-1] = GLYPH_NAME
+            if FLAGS.support_composite:
+                glyph_order = [n for n in font.getGlyphNames() if n != 'space']
+                glyphs = {n: fb.font['glyf'][n] for n in glyph_order}
+                horizontal_metrics = {n: fb.font['hmtx'][n] for n in glyph_order}
+                glyphs['.notdef'] = TTGlyphPen(None).glyph()
+                glyphs[GLYPH_NAME] = glyphs[glyph_order[-1]]
+                del glyphs[glyph_order[-1]]
+                horizontal_metrics[GLYPH_NAME] = horizontal_metrics[glyph_order[-1]]
+                del horizontal_metrics[glyph_order[-1]]
+                glyph_order[-1] = GLYPH_NAME
+            else:
+                glyph_order = ['.notdef', GLYPH_NAME]
+                for n in font.getGlyphNames():
+                    if n == '.notdef':
+                        continue
+                    glyph = fb.font['glyf'][n]
+                    if glyph.numberOfContours:
+                        break
+                glyphs = {
+                    '.notdef': TTGlyphPen(None).glyph(),
+                    GLYPH_NAME: glyph,
+                }
+                horizontal_metrics = {
+                    '.notdef': fb.font['hmtx']['.notdef'],
+                    GLYPH_NAME: fb.font['hmtx'][n],
+                }
 
             fb.setupGlyf(glyphs)
             fb.setupGlyphOrder(glyph_order)
