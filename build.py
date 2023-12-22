@@ -73,6 +73,7 @@ def _compile_font(tofu_svg_path: pathlib.Path) -> pathlib.Path:
         'nanoemoji',
         '--family={}'.format(FAMILY_NAME),
         '--output_file={}'.format(FONT_FILENAME),
+        '--color_format=glyf',
     ]
     if FLAGS.version_major:
         cmd.append('--version_major={}'.format(FLAGS.version_major))
@@ -152,10 +153,6 @@ def _build_ttf() -> pathlib.Path:
                 0x10FFFF + 1) if cp > 1 and cp != 0xFE0F}
 
             fb.font['cmap'].tables.append(cmap_many_to_one)
-
-            # Clear COLR tables defined by nanoemoji
-            # TODO: figure out how to drop COLR and CPAL tables
-            fb.setupCOLR({})
 
             fb.setupPost(keepGlyphNames=True)
 
