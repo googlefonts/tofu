@@ -10,9 +10,9 @@ from fontTools.ttLib.ttFont import TTFont
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib.tables._c_m_a_p import cmap_classes
-from fontTools.ttLib.tables._g_l_y_f import Glyph
 import os
 import pathlib
+import shutil
 import subprocess
 import tempfile
 
@@ -59,7 +59,11 @@ def _script_path() -> pathlib.Path:
     return pathlib.Path(__file__).parent
 
 
-def _compile_font() -> pathlib.Path:
+def _tofu_source_svg_path() -> pathlib.Path:
+    return _script_path() / TOFU_SOURCE_DIR / FLAGS.tofu_source_svg
+
+
+def _compile_font(tofu_svg_path: pathlib.Path) -> pathlib.Path:
     """
     Compiles the Tofu font with nanoemoji.
 
@@ -85,8 +89,7 @@ def _compile_font() -> pathlib.Path:
     if FLAGS.width:
         cmd.append('--width={}'.format(FLAGS.width))
 
-    tofu_svg_absolute_path = _script_path() / TOFU_SOURCE_DIR / FLAGS.tofu_source_svg
-    cmd.append('{}'.format(tofu_svg_absolute_path))
+    cmd.append('{}'.format(tofu_svg_path))
     subprocess.run(cmd)
 
     return pathlib.Path.cwd() / 'build' / FONT_FILENAME
@@ -95,7 +98,12 @@ def _compile_font() -> pathlib.Path:
 def _build_ttf() -> pathlib.Path:
     with tempfile.TemporaryDirectory() as tmpdir:
         os.chdir(tmpdir)
-        ttf_file_path = _compile_font()
+
+        # Copy tofu source SVG to tmp dir with filename expected by nanoemoji
+        tofu_svg_path = pathlib.Path.cwd() / '0000.svg'
+        shutil.copyfile(_tofu_source_svg_path(), tofu_svg_path)
+        ttf_file_path = _compile_font(tofu_svg_path)
+
         with TTFont(ttf_file_path) as font:
             fb = FontBuilder(font=font)
             if FLAGS.support_composite:
