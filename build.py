@@ -155,7 +155,8 @@ def _build_ttf() -> pathlib.Path:
 
             fb.font['cmap'].tables.append(cmap_many_to_one)
             # Add an empty COLR and CPAL table so that the Tofu font can work on Color Emoji
-            _create_empty_colr_and_cpal_table(fb)
+            fb.setupCOLR({})
+            fb.setupCPAL([[]])
 
             fb.setupPost(keepGlyphNames=True)
 
@@ -163,17 +164,6 @@ def _build_ttf() -> pathlib.Path:
             fb.save(ttf_file_path)
 
             return ttf_file_path
-
-
-def _create_empty_colr_and_cpal_table(fb):
-    fb.font['COLR'] = colr = ttLib.newTable('COLR')
-    colr.version = 0
-    colr.ColorLayers = {}
-
-    fb.font['CPAL'] = cpal = ttLib.newTable('CPAL')
-    cpal.version = 0
-    cpal.numPaletteEntries = 0
-    cpal.palettes = []
 
 
 def _create_css(ttf_file_path: pathlib.Path):
