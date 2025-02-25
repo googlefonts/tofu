@@ -154,6 +154,7 @@ def _build_ttf() -> pathlib.Path:
                 0x10FFFF + 1) if cp > 1 and cp != 0xFE0F}
 
             fb.font['cmap'].tables.append(cmap_many_to_one)
+
             # Add an empty COLR and CPAL table so that the Tofu font can work on Color Emoji
             fb.setupCOLR({})
             fb.setupCPAL([[]])
